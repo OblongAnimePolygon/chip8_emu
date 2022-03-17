@@ -8,7 +8,7 @@
 #define REFRESH_PER_SEC      60
 #define INSTRUCTIONS_PER_SEC 749 //This should be 750 but for whatever reason execution loop runs slow
 
-#define DEBUG_TIME_IN_SEC    10
+#define DEBUG_TIME_IN_SEC    4
 
 #define CALCULATE_RATES      true
 
@@ -67,7 +67,7 @@ void chip8_timer(chip8_t *emu)
     useconds = TIME_DIFF_US(&start, &end);
 
     if (useconds < CLOCK_CYCLE_IN_US) usleep(CLOCK_CYCLE_IN_US - useconds);
-    
+
     display_ticks++;
     if (display_ticks > DEBUG_REFRESH_TICKS) break;
 
