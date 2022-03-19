@@ -21,6 +21,12 @@ static void *execution_timer_wrapper(void *args)
   return NULL;
 }
 
+static void *keyboard_timer_wrapper(void *args)
+{
+  chip8_keyboard_timer((chip8_t *) args);
+  return NULL;
+}
+
 void chip_init(chip8_t *emu, const char *rom_name, display_t *d)
 {
   filehandle_t rom_fh;
@@ -54,7 +60,7 @@ int main(int argc, char *argv[])
   chip8_t emu;
   display_t d;
   filehandle_t filehandle;
-  pthread_t display_thread, execution_thread;
+  pthread_t display_thread, execution_thread, keyboard_thread;
 
   if (argc < 2)
   {
@@ -66,11 +72,14 @@ int main(int argc, char *argv[])
   chip_init(&emu, argv[1], &d);
 
   pthread_create(&execution_thread, NULL, execution_timer_wrapper, &emu);
+  pthread_create(&keyboard_thread, NULL, keyboard_timer_wrapper, &emu);
   chip8_timer(&emu); //what the fuck why can i not run this inside a thread????
 
-  LOG("Waiting for execution thread to finish");
+  LOG("Waiting for execution/keyboard threads to finish");
   pthread_join(execution_thread, NULL);
   LOG("Execution thread done");
+  pthread_join(keyboard_thread, NULL);
+  LOG("keyboard thread done");
 
   display_deinit(&d);
 

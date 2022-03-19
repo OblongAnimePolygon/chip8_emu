@@ -20,7 +20,7 @@ static SDL_Rect newSDL_Rect(int xs, int ys, int widths, int heights)
 
 int display_init(display_t *d)
 {
-  d->window = SDL_CreateWindow("SUCK A DICK ROSS", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+  d->window = SDL_CreateWindow("CHIP8", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WINDOW_WIDTH, WINDOW_HEIGHT,
                               SDL_WINDOW_SHOWN);
   if (!d->window)

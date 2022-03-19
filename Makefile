@@ -9,6 +9,7 @@ C_OBJS=
 CORE=core
 LOG=log
 DISPLAY=display
+KEYBOARD=keyboard
 
 READFILE=readfile
 
@@ -34,6 +35,10 @@ C_SRCS+= $(notdir $(wildcard $(DISPLAY)/*.c))
 INCLUDES+=$(DISPLAY)
 vpath %.c $(DISPLAY)
 
+#add keyboard library
+C_SRCS+= $(notdir $(wildcard $(KEYBOARD)/*.c))
+INCLUDES+=$(KEYBOARD)
+vpath %.c $(KEYBOARD)
 
 CFLAGS+=$(addprefix -I, $(INCLUDES))
 C_OBJS+= $(patsubst %.c, %.o, $(C_SRCS))

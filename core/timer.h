@@ -3,5 +3,6 @@
 
 void chip8_timer(chip8_t *emu);
 void chip8_instruction_timer(chip8_t *emu);
+void chip8_keyboard_timer(chip8_t *emu);
 
 #endif
