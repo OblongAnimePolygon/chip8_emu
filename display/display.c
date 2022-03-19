@@ -68,6 +68,16 @@ void update_grid(display_t *d, uint32_t x, uint32_t y, bool is_white)
                 SDL_MapRGB( d->surface->format, color, color, color ) );
 }
 
+void clear_display(display_t *d)
+{
+  //Fill the surface black
+  SDL_FillRect( d->surface, NULL, SDL_MapRGB( d->surface->format, 0x00, 0x00, 0x00 ) );
+
+  //Update the surface
+  SDL_UpdateWindowSurface( d->window );
+  SDL_Delay(10); //Need this for screen refresh lol  
+}
+
 void display_deinit(display_t *d)
 {
   SDL_DestroyWindow(d->window);

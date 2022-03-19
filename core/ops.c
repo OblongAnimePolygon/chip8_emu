@@ -67,9 +67,18 @@ void chip8_execute(chip8_t *emu, uint16_t instruction)
   switch(opcode)
   {
     case CLEAR_SCREEN:
-      //Need to add machine shit lata?
-      DEBUGLOG("CLEAR_SCREEN");
-      memset(emu->display, 0, sizeof(emu->display));
+      if (NNN == 0xE0)
+      {
+        //Need to add machine shit lata?
+        DEBUGLOG("CLEAR_SCREEN");
+        memset(emu->display, 0, sizeof(emu->display));
+        clear_display((emu->io).display);
+      }
+      else
+      {
+        LOG("ERROR!: Not a NNN: %u", opcode);
+        assert(false);
+      }
       break;
     case JUMP:
       DEBUGLOG("JUMP %u", NNN);

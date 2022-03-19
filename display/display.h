@@ -12,6 +12,7 @@ typedef struct display
 
 int display_init(display_t *d);
 void update_display(display_t *d, bool bw_grid[64][32]);
+void clear_display(display_t *d);
 void update_grid(display_t *d, uint32_t x, uint32_t   y, bool is_white);
 void display_deinit(display_t *d);
 
