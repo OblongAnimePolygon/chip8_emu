@@ -6,8 +6,14 @@
 
 #define CLEAR_SCREEN 0
 #define JUMP 1
+#define JUMP_TO_SUBROUTINE 2
+#define SKIP_IF_EQ 3
+#define SKIP_IF_NEQ 4
+#define SKIP_IF_XY_EQ 5
 #define SET_REGISTER 6
 #define ADD_VALUE_REGISTER 7
+#define MATH 8
+#define SKIP_IF_XY_NEQ 9
 #define SET_INDEX_REGISTER 10
 #define DISPLAY 13
 
@@ -52,6 +58,70 @@ void draw(chip8_t *emu, uint8_t vx, uint8_t vy, uint8_t val)
 
 }
 
+void math(chip8_t *emu, uint8_t X, uint8_t Y, uint8_t N)
+{
+  switch (N)
+  {
+    case 0:
+      DEBUGLOG("SET");
+      emu->V[X] = emu->V[Y];
+      break;
+    case 1:
+      DEBUGLOG("OR");
+      emu->V[X] |= emu->V[Y];
+      break;
+    case 2:
+      DEBUGLOG("AND");
+      emu->V[X] &= emu->V[Y];
+      break;
+    case 3:
+      DEBUGLOG("XOR");
+      emu->V[X] ^= emu->V[Y];
+      break;
+    case 4:
+      DEBUGLOG("ADD");
+      emu->V[15] = 0;
+      if (emu->V[X] > (emu->V[X] + emu->V[Y]))
+      {
+        emu->V[15] = 1;
+      }
+      emu->V[X] = emu->V[X] + emu->V[Y];
+      break;
+    case 5:
+      DEBUGLOG("SUBTRACT XY");
+      emu->V[15] = 1;
+      if (emu->V[Y] > emu->V[X])
+      {
+        emu->V[15] = 0;
+      }
+      emu->V[X] = emu->V[X] - emu->V[Y];
+      break;
+    case 7:
+      DEBUGLOG("SUBTRACT YX");
+      emu->V[15] = 1;
+      if (emu->V[X] > emu->V[Y])
+      {
+        emu->V[15] = 0;
+      }
+      emu->V[X] = emu->V[Y] - emu->V[X];
+      break;
+    case 6:
+      DEBUGLOG("SHIFT RIGHT");
+      //do new behavior ignoring Y
+      emu->V[15] = emu->V[X] & 1;
+      emu->V[X] >>= 1;
+      break;
+    case 14:
+      DEBUGLOG("SHIFT LEFT");
+      emu->V[15] = emu->V[X] >> 7;
+      emu->V[X] <<= 1;
+      break;
+    default:
+      LOG("ERROR: Invalid math operation");
+      assert(false);
+  }
+}
+
 void chip8_execute(chip8_t *emu, uint16_t instruction)
 {
   uint8_t N = (instruction & 0xF);
@@ -74,6 +144,13 @@ void chip8_execute(chip8_t *emu, uint16_t instruction)
         memset(emu->display, 0, sizeof(emu->display));
         clear_display((emu->io).display);
       }
+      else if (NNN == 0xEE) //return from subroutine
+      {
+        DEBUGLOG("RETURN FROM SUBROUTINE");
+        emu->stack_ptr -= 2;
+        emu->PC = emu->RAM[emu->stack_ptr];
+        emu->PC = (emu->PC << 8) | emu->RAM[emu->stack_ptr + 1];
+      }
       else
       {
         LOG("ERROR!: Not a NNN: %u", opcode);
@@ -84,6 +161,35 @@ void chip8_execute(chip8_t *emu, uint16_t instruction)
       DEBUGLOG("JUMP %u", NNN);
       emu->PC = NNN;
       break;
+    case JUMP_TO_SUBROUTINE:
+      DEBUGLOG("JUMP_TO_SUBROUTINE %u", NNN);
+      emu->RAM[emu->stack_ptr] = (instruction & 0xFF00) >> 8;
+      emu->RAM[emu->stack_ptr + 1] = (instruction & 0xFF);
+      
+      emu->stack_ptr += 2;
+      emu->PC = NNN;
+      break;
+    case SKIP_IF_EQ:
+      DEBUGLOG("SKIP_IF_EQ");
+      if (emu->V[X] == NN)
+      {
+        emu->PC += 2;
+      }
+      break;
+    case SKIP_IF_NEQ:
+      DEBUGLOG("SKIP_IF_NEQ");
+      if (emu->V[X] != NN)
+      {
+        emu->PC += 2;
+      }
+      break;
+    case SKIP_IF_XY_EQ:
+      DEBUGLOG("SKIP_IF_XY_EQ");
+      if (emu->V[X] == emu->V[Y])
+      {
+        emu->PC += 2;
+      }
+      break;
     case SET_REGISTER:
       DEBUGLOG("SET_REGISTER %u, %u", X, NN);
       emu->V[X] = NN;
@@ -91,6 +197,16 @@ void chip8_execute(chip8_t *emu, uint16_t instruction)
     case ADD_VALUE_REGISTER:
       DEBUGLOG("ADD VALUE REGISTER, %u, %u", X, NN);
       emu->V[X] += NN;
+      break;
+    case MATH:
+      math(emu, X, Y, N);
+      break;
+    case SKIP_IF_XY_NEQ:
+      DEBUGLOG("SKIP_IF_XY_NEQ");
+      if (emu->V[X] != emu->V[Y])
+      {
+        emu->PC += 2;
+      }
       break;
     case SET_INDEX_REGISTER:
       DEBUGLOG("SET INDEX REGISTER, %u", NNN);
