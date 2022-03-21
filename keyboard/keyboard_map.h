@@ -10,6 +10,11 @@ Chip 8 keyboard layout
 7	8	9	E
 A	0	B	F
 
+1(0) 2(1) 3(2) C(3)
+4(4) 5(5) 6(6) D(7)
+7(8) 8(9) 9(10) E(11)
+A(12) 0(13) B(14) F(15)
+
 US Keyboard layout
 
 1 2 3 4

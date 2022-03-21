@@ -1,8 +1,10 @@
 #include "ops.h"
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "log.h"
 #include "display.h"
+#include "keyboard.h"
 
 #define CLEAR_SCREEN 0
 #define JUMP 1
@@ -15,7 +17,11 @@
 #define MATH 8
 #define SKIP_IF_XY_NEQ 9
 #define SET_INDEX_REGISTER 10
+#define JUMP_WITH_OFFSET 11
+#define RANDOM           12
 #define DISPLAY 13
+#define SKIP_IF_KEY 14
+#define TIMER  15
 
 void draw(chip8_t *emu, uint8_t vx, uint8_t vy, uint8_t val)
 {
@@ -56,6 +62,36 @@ void draw(chip8_t *emu, uint8_t vx, uint8_t vy, uint8_t val)
     }
   }
 
+}
+
+void skip_if_key(chip8_t *emu, uint8_t X, uint8_t NN)
+{
+  if (emu->V[X] > 15)
+  {
+    LOG("ERROR: SKIP INSTRUCTION VX REGISTER GREATER THAN 15");
+    assert(false);
+  }
+
+  switch (NN)
+  {
+    case 0x9E:
+      DEBUGLOG("SKIP IF KEYPRESSED, %u", emu->V[X]);
+      if (emu->keyboard_state[key_to_index(emu->V[X])])
+      {
+        emu->PC += 2;
+      }
+      break;
+    case 0xA1:
+      DEBUGLOG("SKIP IF KEY NOT PRESSED, %u", emu->V[X]);
+      if (!emu->keyboard_state[key_to_index(emu->V[X])])
+      {
+        emu->PC += 2;
+      }
+      break;
+    default:
+      LOG("ERROR: INVVALID SKIP_IF_KEY INSTRUCTION");
+      assert(false);
+  }
 }
 
 void math(chip8_t *emu, uint8_t X, uint8_t Y, uint8_t N)
@@ -212,9 +248,19 @@ void chip8_execute(chip8_t *emu, uint16_t instruction)
       DEBUGLOG("SET INDEX REGISTER, %u", NNN);
       emu->l = NNN;
       break;
+    case JUMP_WITH_OFFSET:
+      DEBUGLOG("JUMP WITH OFFSET, %u", NNN);
+      emu->PC = NNN;
+      emu->V[X] = NNN;
+    case RANDOM:
+      DEBUGLOG("RANDOM, %u, %u", X, NN);
+      emu->V[X] = ((uint8_t) rand()) & NN;
     case DISPLAY:
       DEBUGLOG("DISPLAY, %u, %u, %u", X, Y, N);
       draw(emu, emu->V[X], emu->V[Y], N);
+      break;
+    case SKIP_IF_KEY:
+      skip_if_key(emu, X, NN);
       break;
     default:
       LOG("ERROR!: Not a valid instruction: %u", opcode);
